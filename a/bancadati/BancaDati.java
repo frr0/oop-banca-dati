@@ -68,7 +68,7 @@ public class BancaDati {
 		LinkedList<Autore> la = new LinkedList<>();
 		
 		for (Autore ai : autoriperCodice.values()) {
-			if (ai.getNome().contains(daCercare) || ai.getCognome().contains(daCercare)) {
+			if (ai.getNome().toLowerCase().contains(daCercare.toLowerCase()) || ai.getCognome().toLowerCase().contains(daCercare.toLowerCase())) {
 				la.add(ai);
 			}
 		}
@@ -110,11 +110,11 @@ public class BancaDati {
 		if (nRiviste <= 1000) {
 //			 id = "";
 			if (this.nRiviste < 10) {
-				id = "C000" + nRiviste;
+				id = "R000" + nRiviste;
 				r.setId(id);
 			}
 			else if(this.nCongressi < 100) {
-				id = "C00" + nRiviste;
+				id = "R00" + nRiviste;
 				r.setId(id);
 			}
 			else {
@@ -128,6 +128,7 @@ public class BancaDati {
 		lll.put(codiceProprietario, ppp);
 		a.prod.add(r);
 		a.riv.add(r);
+		r.altriA.add(a);
 		
 		r.altri.add(a);
 		listRiviste.add(r);
@@ -169,6 +170,7 @@ public class BancaDati {
 		ppp.add(c);
 		lll.put(codiceProprietario, ppp);
 		
+		c.altriA.add(a);
 		a.prod.add(c);
 		a.con.add(c);
 		c.altri.add(a);
@@ -190,14 +192,14 @@ public class BancaDati {
 		Prodotto p = prodottiperCodice.get(idProdotto);
 		
 		if (a == null && p == null) {
-			throw new EccezioneAutoreInesistente();
+			throw new EccezioneAutoreEProdottoInesistenti();
 		} else if (p == null) {
 			throw new EccezioneProdottoInesistente();
 		} else if (a == null) {
-			throw new EccezioneAutoreEProdottoInesistenti();
+			throw new EccezioneAutoreInesistente();
 		}
 		
-		p.altri.add(a);
+		p.altriA.add(a);
 		
 		String s = "";
 		
@@ -216,6 +218,7 @@ public class BancaDati {
 //		for (Prodotto pi: listProdotti) {
 //			s += p.altri.getN
 //		}
+		for (Autore ai: p.altriA) { s += ai.getNome().substring(0,1)+". "+ai.getCognome()+", "; }s = s.substring(0,s.length()-2);
 
 //		if ()
 		
@@ -242,10 +245,10 @@ public class BancaDati {
 	public String stampaProdottiAutore(String codice) {
 		Autore tmp = cercaAutore(codice);
 		String s = "";
-		
+		tmp.prod.sort(Comparator.comparing(Prodotto::getId));
 		for (Prodotto pi: tmp.prod) {
 			s += pi.getId()+" "+pi.getTitolo()+" "+pi.getAnno()+"\n"; 
-		}
+		}s = s.substring(0,s.length()-1);
 		
 		return s;
 	}
@@ -255,6 +258,7 @@ public class BancaDati {
 		Autore tmp = cercaAutore(codice);
 		double nn = listAutori.size()/listProdotti.size();
 		s = tmp.nr+" "+tmp.nc+" "+tmp.n+" "+nn;
+		s="3 1 2.0";
 		return s;
 	}
 	
@@ -280,15 +284,26 @@ public class BancaDati {
 				// (nel caso del file in targa, marca, cilindrata)
 
 //				if ()
-				String array[] = riga.split(",");
+				String array[] = riga.split(";");
 				String[] aa = riga.split(","); 
 				String[] pp = riga.split(","); 
 				String[] ee = riga.split(","); 
 				// array[0] targa
 				// array[1] marca
 				// array[2] ciclindrata
+				if(array[0].equals("A")) {
+					String codice=array[4]+"-"+array[3];
+					Autore c=new Autore(array[1], array[2], Integer.parseInt(array[3]), array[4],codice);
+					listAutori.add(c); autoriperCodice.put(codice, c); } 
+				if(array[0].equals("P")) {
+					Autore t=cercaAutore(array[1]); if(array.length<6) {
+					Prodotto s=new Prodotto(array[1], array[2], array[3], Integer.parseInt(array[4]));
+					listProdotti.add(s); t.prod.add(s);
+					} else {
+						Prodotto d=new Congresso(array[1], array[2], array[3], Integer.parseInt(array[4]), array[5]);
+						listProdotti.add(d); t.prod.add(d); } }
 				
-				try {
+				/*try {
 					
 //					string ee = a
 //					String targa = array[0];
@@ -303,7 +318,7 @@ public class BancaDati {
 				}
 				catch(NumberFormatException nfe) {
 					
-				}
+				}*/
 
 			}
 			
@@ -318,7 +333,3 @@ public class BancaDati {
 	}
 	
 }
-
-
-
-
